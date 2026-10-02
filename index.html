@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Print Qty Calculator</title>
+<title>Print Shop Toolkit</title>
 <style>
 :root{--bg:#f6f5f2;--card:#fff;--ink:#1b1b1b;--mute:#6b6b66;--line:#e2e0da;--acc:#0f766e;--accbg:#d9f0ed;--piece:#0f766e;--rot:#d97706;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#121413;--card:#1c1f1e;--ink:#f0efea;--mute:#9a9a92;--line:#2c302e;--acc:#2dd4bf;--accbg:#12332f;--piece:#2dd4bf;--rot:#fbbf24}}
@@ -11,8 +11,12 @@
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
 .wrap{max-width:1000px;margin:0 auto;padding:18px 14px 40px}
-h1{font-size:22px;margin:0 0 2px}
-.sub{color:var(--mute);margin:0 0 16px}
+h1{font-size:22px;margin:0}
+.top{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+.top .g{display:flex;gap:8px}.top .g>div{width:90px}
+.tabs{display:flex;gap:6px;margin-bottom:14px;overflow-x:auto}
+.tab{border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:99px;padding:8px 16px;font:inherit;cursor:pointer;white-space:nowrap}
+.tab.on{background:var(--acc);color:var(--bg);border-color:var(--acc)}
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 @media(max-width:760px){.grid{grid-template-columns:1fr}}
 .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px}
@@ -21,8 +25,9 @@ label{display:block;font-size:12px;color:var(--mute);margin-bottom:3px}
 input,select{width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);font:inherit}
 input:focus,select:focus{outline:2px solid var(--acc);outline-offset:-1px}
 .row{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:10px}
-.row3{grid-template-columns:repeat(3,1fr)}
-.srow{display:grid;grid-template-columns:1.4fr 1fr 1fr auto;gap:6px;margin-bottom:6px;align-items:center}
+.r3{grid-template-columns:repeat(3,1fr)}
+.srow{display:grid;grid-template-columns:1.3fr .8fr .8fr .8fr auto;gap:6px;margin-bottom:6px;align-items:center}
+.sh{font-size:11px;color:var(--mute);margin-bottom:4px}
 .x{background:none;border:0;color:var(--mute);font-size:18px;cursor:pointer;padding:4px 8px}
 .btn{border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:8px;padding:8px 12px;font:inherit;cursor:pointer}
 .btn:hover{border-color:var(--acc)}
@@ -31,159 +36,189 @@ input:focus,select:focus{outline:2px solid var(--acc);outline-offset:-1px}
 table{width:100%;border-collapse:collapse;font-size:14px}
 th,td{text-align:left;padding:8px 6px;border-bottom:1px solid var(--line);white-space:nowrap}
 th{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--mute)}
-tbody tr{cursor:pointer}
-tbody tr.sel{background:var(--accbg)}
+#res tr{cursor:pointer}
+#res tr.sel{background:var(--accbg)}
 .big{font-weight:700;font-size:17px}
 .best{display:inline-block;background:var(--acc);color:var(--bg);font-size:10px;padding:1px 6px;border-radius:99px;margin-left:6px;vertical-align:middle}
 .leg{display:flex;gap:14px;font-size:12px;color:var(--mute);margin:8px 0 0;flex-wrap:wrap}
 .leg i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px}
 svg{width:100%;height:auto;max-height:420px;display:block}
 .note{color:var(--mute);font-size:12px;margin-top:8px}
+.tot td{font-weight:700;font-size:16px;border-bottom:0}
+.hid{display:none}
+.ph{display:none}
+@media print{.noprint,.tabs,.top .g{display:none!important}body{background:#fff}.card{border-color:#ccc;break-inside:avoid}.ph{display:block;margin-bottom:8px}}
 </style>
 </head>
 <body>
 <div class="wrap">
-  <h1>Print Qty Calculator</h1>
-  <p class="sub">Enter your design size. See how many pieces fit on each stock size.</p>
+  <div class="top">
+    <div><h1>Print Shop Toolkit</h1><div class="note" style="margin:2px 0 0">Qty on stock · costing · large format · quotes</div></div>
+    <div class="g noprint"><div><label>Unit</label><select id="unit"><option value="1">mm</option><option value="10" selected>cm</option><option value="25.4">inch</option></select></div><div><label>Currency</label><input id="cur" value="AED"></div></div>
+  </div>
+  <div class="tabs noprint"><button class="tab on" data-t="t1">Qty &amp; Cost</button><button class="tab" data-t="t2">Large format</button><button class="tab" data-t="t3">Quote</button></div>
 
-  <div class="grid">
-    <div class="card">
+  <div id="t1" class="grid">
+    <div class="card noprint">
       <h2>Design &amp; settings</h2>
-      <div class="row">
-        <div><label>Design width</label><input id="dw" type="number" step="any" min="0" value="9"></div>
-        <div><label>Design height</label><input id="dh" type="number" step="any" min="0" value="5.5"></div>
-      </div>
-      <div class="row row3">
-        <div><label>Unit</label><select id="unit"><option value="1">mm</option><option value="10" selected>cm</option><option value="25.4">inch</option></select></div>
-        <div><label>Gap between</label><input id="gap" type="number" step="any" min="0" value="0.2"></div>
-        <div><label>Sheet margin</label><input id="mar" type="number" step="any" min="0" value="0.5"></div>
-      </div>
-      <div class="row">
-        <div><label>Qty needed (optional)</label><input id="need" type="number" min="0" placeholder="e.g. 1000"></div>
-        <div><label>Allow rotation</label><select id="rot"><option value="1">Yes (best fit)</option><option value="0">No (fixed direction)</option></select></div>
-      </div>
+      <div class="row"><div><label>Design width</label><input id="dw" type="number" step="any" min="0" value="9"></div><div><label>Design height</label><input id="dh" type="number" step="any" min="0" value="5.5"></div></div>
+      <div class="row r3"><div><label>Gap between</label><input id="gap" type="number" step="any" min="0" value="0.2"></div><div><label>Sheet margin</label><input id="mar" type="number" step="any" min="0" value="0.5"></div><div><label>Bleed (each side)</label><input id="bl" type="number" step="any" min="0" value="0.3"></div></div>
+      <div class="row r3"><div><label>Qty needed</label><input id="need" type="number" min="0" placeholder="e.g. 1000"></div><div><label>Wastage %</label><input id="waste" type="number" step="any" min="0" value="5"></div><div><label>Rotation</label><select id="rot"><option value="1">Best fit</option><option value="0">Fixed</option></select></div></div>
+      <div class="row"><div><label>Crop marks in preview</label><select id="crop"><option value="1">Show</option><option value="0">Hide</option></select></div></div>
     </div>
-
-    <div class="card">
+    <div class="card noprint">
       <h2>Ready-made stock sizes</h2>
+      <div class="srow sh"><span>Name</span><span>Width</span><span>Height</span><span>Price/sheet</span><span></span></div>
       <div id="stocks"></div>
       <button class="btn" id="add">+ Add stock size</button>
     </div>
-
     <div class="card wide">
+      <div class="ph" id="psum"></div>
       <h2>Results</h2>
-      <div class="tw"><table>
-        <thead><tr><th>Stock</th><th>Size</th><th>Pcs / sheet</th><th>Used</th><th id="nh">Sheets needed</th></tr></thead>
-        <tbody id="res"></tbody>
-      </table></div>
-      <div class="note">Tap a row to preview the layout. Used % = design area ÷ full sheet area.</div>
+      <div class="tw"><table><thead id="rh"></thead><tbody id="res"></tbody></table></div>
+      <div class="note">Tap a row to preview. Used % = design area ÷ sheet area. Sheets needed includes wastage. Set a price per sheet to compare costs.</div>
     </div>
-
     <div class="card wide">
-      <h2 id="ptitle">Layout preview</h2>
+      <div style="display:flex;justify-content:space-between;align-items:center"><h2 id="ptitle" style="margin:0">Layout preview</h2><button class="btn noprint" id="prt">Print / save PDF</button></div>
       <div id="prev"></div>
       <div class="leg"><span><i style="background:var(--piece)"></i>Normal</span><span><i style="background:var(--rot)"></i>Rotated 90°</span><span><i style="border:1px dashed var(--mute)"></i>Margin</span></div>
     </div>
   </div>
+
+  <div id="t2" class="grid hid">
+    <div class="card">
+      <h2>Banner / vinyl / roll job</h2>
+      <div class="row"><div><label>Item width</label><input id="lw" type="number" step="any" min="0" value="200"></div><div><label>Item height</label><input id="lh" type="number" step="any" min="0" value="80"></div></div>
+      <div class="row r3"><div><label>Qty</label><input id="lq" type="number" min="1" value="3"></div><div><label>Roll width</label><input id="lrw" type="number" step="any" min="0" value="320"></div><div><label>Gap</label><input id="lg" type="number" step="any" min="0" value="2"></div></div>
+      <div class="row"><div><label>Material price per m²</label><input id="lp" type="number" step="any" min="0" value="0"></div></div>
+    </div>
+    <div class="card"><h2>Result</h2><div id="lout"></div></div>
+  </div>
+
+  <div id="t3" class="grid hid">
+    <div class="card noprint">
+      <h2>Quote details</h2>
+      <div class="row"><div><label>Customer</label><input id="qc"></div><div><label>Job</label><input id="qj"></div></div>
+      <div class="row r3"><div><label>Printing cost / sheet</label><input id="qpr" type="number" step="any" min="0" value="0"></div><div><label>Finishing / piece</label><input id="qfin" type="number" step="any" min="0" value="0"></div><div><label>Setup / design fee</label><input id="qset" type="number" step="any" min="0" value="0"></div></div>
+      <div class="row"><div><label>Markup %</label><input id="qmk" type="number" step="any" min="0" value="30"></div><div><label>VAT %</label><input id="qvat" type="number" step="any" min="0" value="5"></div></div>
+      <div class="note">Uses the stock row selected on the Qty &amp; Cost tab and its Qty needed.</div>
+    </div>
+    <div class="card"><h2>Quote</h2><div id="qout"></div>
+      <div class="noprint" style="margin-top:10px;display:flex;gap:8px"><button class="btn" id="qcopy">Copy text</button><button class="btn" id="qprt">Print / save PDF</button></div></div>
+  </div>
 </div>
 
 <script>
-const $=id=>document.getElementById(id);
-let stocks=[{n:"21×15 cm",w:210,h:150},{n:"25×23 cm",w:250,h:230},{n:"45×25 cm",w:450,h:250},{n:"45×32 cm",w:450,h:320},{n:"48×23 cm",w:480,h:230},{n:"23×20 cm",w:230,h:200},{n:"20×14 cm",w:200,h:140},{n:"35×25 cm",w:350,h:250},{n:"35×33 cm",w:350,h:330},{n:"33×23 cm",w:330,h:230},{n:"48×33 cm",w:480,h:330},{n:"50×35 cm",w:500,h:350},{n:"50×23 cm",w:500,h:230},{n:"100×70 cm",w:1000,h:700},{n:"90×64 cm",w:900,h:640},{n:"70×50 cm",w:700,h:500}];
-try{const s=JSON.parse(localStorage.getItem("pqc_stocks_v2")||"null");if(Array.isArray(s)&&s.length)stocks=s}catch(e){}
-let sel=0,lastUnit=10;
-const save=()=>{try{localStorage.setItem("pqc_stocks_v2",JSON.stringify(stocks))}catch(e){}};
-const u=()=>parseFloat($("unit").value);
-const f=v=>+(v/u()).toFixed(3);       // mm -> display
-const t=v=>(parseFloat(v)||0)*u();    // display -> mm
+const $=id=>document.getElementById(id),V=id=>parseFloat($(id).value)||0;
+const DEF="21x15 25x23 45x25 45x32 48x23 23x20 20x14 35x25 35x33 33x23 48x33 50x35 50x23 100x70 90x64 70x50".split(" ").map(z=>{const[a,b]=z.split("x");return{n:a+"×"+b+" cm",w:a*10,h:b*10,p:0}});
+let stocks=null,sel=0,lastUnit=10,R=[];
+try{stocks=JSON.parse(localStorage.getItem("pqc_v3")||localStorage.getItem("pqc_stocks_v2")||"null")}catch(e){}
+if(!Array.isArray(stocks)||!stocks.length)stocks=DEF;
+stocks.forEach(s=>s.p=+s.p||0);
+const save=()=>{try{localStorage.setItem("pqc_v3",JSON.stringify(stocks))}catch(e){}};
+const u=()=>parseFloat($("unit").value),f=v=>+(v/u()).toFixed(3),t=v=>(parseFloat(v)||0)*u();
+const M=v=>($("cur").value||"")+" "+v.toFixed(2),esc=s=>String(s).replace(/"/g,"&quot;");
 
-// place pieces of size w×h in region; returns rects
-function place(x0,y0,W,H,w,h,g,r){
-  const o=[];if(w<=0||h<=0||W<w||H<h)return o;
+function place(x0,y0,W,H,w,h,g,r){const o=[];if(w<=0||h<=0||W<w||H<h)return o;
   const nx=Math.floor((W+g)/(w+g)),ny=Math.floor((H+g)/(h+g));
-  for(let j=0;j<ny;j++)for(let i=0;i<nx;i++)o.push({x:x0+i*(w+g),y:y0+j*(h+g),w,h,r});
-  return o;
-}
-function extent(a){return a.length?{w:Math.max(...a.map(p=>p.x+p.w)),h:Math.max(...a.map(p=>p.y+p.h))}:{w:0,h:0}}
+  for(let j=0;j<ny;j++)for(let i=0;i<nx;i++)o.push({x:x0+i*(w+g),y:y0+j*(h+g),w,h,r});return o}
+const ext=a=>a.length?{w:Math.max(...a.map(p=>p.x+p.w)),h:Math.max(...a.map(p=>p.y+p.h))}:{w:0,h:0};
+function best(W,H,w,h,g,ar){let top=[];
+  for(const [a,b,r] of ar?[[w,h,false],[h,w,true]]:[[w,h,false]]){
+    const m=place(0,0,W,H,a,b,g,r);if(!m.length)continue;const e=ext(m),c=[m];
+    if(ar){const q=!r;
+      c.push(m.concat(place(e.w+g,0,W-e.w-g,H,b,a,g,q),place(0,e.h+g,e.w,H-e.h-g,b,a,g,q)));
+      c.push(m.concat(place(e.w+g,0,W-e.w-g,e.h,b,a,g,q),place(0,e.h+g,W,H-e.h-g,b,a,g,q)))}
+    for(const x of c)if(x.length>top.length)top=x}
+  return top}
 
-function best(W,H,w,h,g,allowRot){
-  let top=[];
-  const dirs=allowRot?[[w,h,false],[h,w,true]]:[[w,h,false]];
-  for(const [a,b,r] of dirs){
-    const m=place(0,0,W,H,a,b,g,r);
-    if(!m.length)continue;
-    const e=extent(m),c=[m];
-    if(allowRot){
-      const rr=!r;
-      c.push(m.concat(place(e.w+g,0,W-e.w-g,H,b,a,g,rr),place(0,e.h+g,e.w,H-e.h-g,b,a,g,rr)));
-      c.push(m.concat(place(e.w+g,0,W-e.w-g,e.h,b,a,g,rr),place(0,e.h+g,W,H-e.h-g,b,a,g,rr)));
-    }
-    for(const x of c)if(x.length>top.length)top=x;
-  }
-  return top;
-}
-
-function renderStocks(){
-  $("stocks").innerHTML=stocks.map((s,i)=>`<div class="srow">
-    <input data-i="${i}" data-k="n" value="${s.n.replace(/"/g,"&quot;")}" placeholder="Name">
-    <input data-i="${i}" data-k="w" type="number" step="any" value="${f(s.w)}" placeholder="W">
-    <input data-i="${i}" data-k="h" type="number" step="any" value="${f(s.h)}" placeholder="H">
-    <button class="x" data-del="${i}" title="Remove">×</button></div>`).join("");
-}
+function renderStocks(){$("stocks").innerHTML=stocks.map((s,i)=>`<div class="srow">
+  <input data-i="${i}" data-k="n" value="${esc(s.n)}">
+  <input data-i="${i}" data-k="w" type="number" step="any" value="${f(s.w)}">
+  <input data-i="${i}" data-k="h" type="number" step="any" value="${f(s.h)}">
+  <input data-i="${i}" data-k="p" type="number" step="any" min="0" value="${s.p||""}" placeholder="0.00">
+  <button class="x" data-del="${i}" title="Remove">×</button></div>`).join("")}
 
 function calc(){
-  const w=t($("dw").value),h=t($("dh").value),g=t($("gap").value),m=t($("mar").value);
-  const rot=$("rot").value==="1",need=parseInt($("need").value)||0;
-  $("nh").style.display=need?"":"none";
-  const rows=stocks.map((s,i)=>{
-    const W=s.w-2*m,H=s.h-2*m;
-    const L=(W>0&&H>0&&w>0&&h>0)?best(W,H,w,h,g,rot):[];
-    const n=L.length,used=s.w*s.h?n*w*h/(s.w*s.h)*100:0;
-    return{i,s,L,n,used,W,H,sheets:need&&n?Math.ceil(need/n):null};
-  });
-  const mx=Math.max(0,...rows.map(r=>r.n));
-  if(sel>=rows.length)sel=0;
+  const bl=t($("bl").value),w=t($("dw").value)+2*bl,h=t($("dh").value)+2*bl,g=t($("gap").value),m=t($("mar").value);
+  const ar=$("rot").value==="1",need=parseInt($("need").value)||0,wa=V("waste");
+  R=stocks.map((s,i)=>{const W=s.w-2*m,H=s.h-2*m;
+    const L=(W>0&&H>0&&w>0&&h>0)?best(W,H,w,h,g,ar):[],n=L.length;
+    const sheets=need&&n?Math.ceil(need*(1+wa/100)/n):null,cost=sheets&&s.p>0?sheets*s.p:null;
+    return{i,s,L,n,used:s.w*s.h?n*w*h/(s.w*s.h)*100:0,sheets,cost}});
+  const priced=need&&R.some(r=>r.cost),mx=Math.max(0,...R.map(r=>r.n));
+  const cheap=priced?Math.min(...R.filter(r=>r.cost).map(r=>r.cost)):0;
+  if(sel>=R.length)sel=0;
   const un=$("unit").selectedOptions[0].text;
-  $("res").innerHTML=rows.map(r=>`<tr data-s="${r.i}" class="${r.i===sel?"sel":""}">
-    <td>${r.s.n||"Stock "+(r.i+1)}${r.n&&r.n===mx?'<span class="best">BEST</span>':""}</td>
-    <td>${f(r.s.w)} × ${f(r.s.h)} ${un}</td>
-    <td class="big">${r.n}</td><td>${r.used.toFixed(1)}%</td>
-    ${need?`<td>${r.sheets??"—"}</td>`:""}</tr>`).join("")||`<tr><td colspan="5">Add a stock size.</td></tr>`;
-  draw(rows[sel],m);
-}
+  $("rh").innerHTML=`<tr><th>Stock</th><th>Size</th><th>Pcs / sheet</th><th>Used</th>${need?"<th>Sheets (+waste)</th>":""}${priced?"<th>Total</th><th>Per piece</th>":""}</tr>`;
+  $("res").innerHTML=R.map(r=>{const tag=priced?(r.cost&&r.cost===cheap?"CHEAPEST":""):(r.n&&r.n===mx?"MOST PCS":"");
+    return`<tr data-s="${r.i}" class="${r.i===sel?"sel":""}"><td>${esc(r.s.n||"Stock "+(r.i+1))}${tag?`<span class="best">${tag}</span>`:""}</td>
+    <td>${f(r.s.w)} × ${f(r.s.h)} ${un}</td><td class="big">${r.n}</td><td>${r.used.toFixed(1)}%</td>
+    ${need?`<td>${r.sheets??"—"}</td>`:""}${priced?`<td>${r.cost?M(r.cost):"—"}</td><td>${r.cost?M(r.cost/need):"—"}</td>`:""}</tr>`}).join("");
+  $("psum").textContent=`Design ${$("dw").value} × ${$("dh").value} ${un}, bleed ${$("bl").value}, gap ${$("gap").value}, margin ${$("mar").value}${need?`, qty ${need}`:""}`;
+  draw(R[sel],m,bl)}
 
-function draw(r,m){
-  if(!r){$("prev").innerHTML="";return}
-  const S=r.s;
-  $("ptitle").textContent=`Layout preview — ${S.n||"Stock"}: ${r.n} pcs`;
-  const fs=Math.max(S.w,S.h)/28;
-  const rects=r.L.map(p=>`<rect x="${p.x+m}" y="${p.y+m}" width="${p.w}" height="${p.h}" fill="${p.r?"var(--rot)":"var(--piece)"}" fill-opacity=".75" stroke="var(--card)" stroke-width="${fs/12}"/>`).join("");
-  const labels=r.L.length<=150?"":"";
-  $("prev").innerHTML=`<svg viewBox="-${fs} -${fs} ${S.w+2*fs} ${S.h+2*fs}" role="img" aria-label="Layout preview">
-    <rect x="0" y="0" width="${S.w}" height="${S.h}" fill="var(--bg)" stroke="var(--mute)" stroke-width="${fs/14}"/>
-    <rect x="${m}" y="${m}" width="${Math.max(0,S.w-2*m)}" height="${Math.max(0,S.h-2*m)}" fill="none" stroke="var(--mute)" stroke-dasharray="${fs/3} ${fs/3}" stroke-width="${fs/20}"/>
-    ${rects}${labels}</svg>`;
-}
+function draw(r,m,bl){if(!r){$("prev").innerHTML="";return}
+  const S=r.s,fs=Math.max(S.w,S.h)/28,crop=$("crop").value==="1"&&bl>0;
+  $("ptitle").textContent=`Preview — ${S.n||"Stock"}: ${r.n} pcs`;
+  let o="";
+  for(const p of r.L){const x=p.x+m,y=p.y+m;
+    o+=`<rect x="${x}" y="${y}" width="${p.w}" height="${p.h}" fill="${p.r?"var(--rot)":"var(--piece)"}" fill-opacity=".75"/>`;
+    if(bl>0)o+=`<rect x="${x+bl}" y="${y+bl}" width="${p.w-2*bl}" height="${p.h-2*bl}" fill="none" stroke="var(--card)" stroke-width="${fs/16}"/>`;
+    if(crop){const a=x+bl,b=y+bl,c=x+p.w-bl,d=y+p.h-bl,k=bl*.9,sw=fs/20;
+      o+=`<path stroke="var(--ink)" stroke-width="${sw}" d="M${a-k} ${b}H${a-.1}M${a} ${b-k}V${b-.1}M${c+k} ${b}H${c+.1}M${c} ${b-k}V${b-.1}M${a-k} ${d}H${a-.1}M${a} ${d+k}V${d+.1}M${c+k} ${d}H${c+.1}M${c} ${d+k}V${d+.1}"/>`}}
+  $("prev").innerHTML=`<svg viewBox="-${fs} -${fs} ${S.w+2*fs} ${S.h+2*fs}" role="img" aria-label="Layout preview"><rect x="0" y="0" width="${S.w}" height="${S.h}" fill="var(--bg)" stroke="var(--mute)" stroke-width="${fs/14}"/><rect x="${m}" y="${m}" width="${Math.max(0,S.w-2*m)}" height="${Math.max(0,S.h-2*m)}" fill="none" stroke="var(--mute)" stroke-dasharray="${fs/3} ${fs/3}" stroke-width="${fs/20}"/>${o}</svg>`}
 
-["dw","dh","gap","mar","need","rot"].forEach(id=>$(id).addEventListener("input",calc));
-$("unit").addEventListener("change",()=>{
-  const nu=u(),k=lastUnit/nu;
-  ["dw","dh","gap","mar"].forEach(id=>{const v=parseFloat($(id).value);if(!isNaN(v))$(id).value=+(v*k).toFixed(3)});
-  lastUnit=nu;renderStocks();calc();
-});
-$("stocks").addEventListener("input",e=>{
-  const d=e.target.dataset;if(d.i===undefined)return;
-  const s=stocks[d.i];s[d.k]=d.k==="n"?e.target.value:t(e.target.value);save();calc();
-});
-$("stocks").addEventListener("click",e=>{
-  const i=e.target.dataset.del;if(i===undefined)return;
-  stocks.splice(+i,1);save();renderStocks();calc();
-});
-$("add").addEventListener("click",()=>{stocks.push({n:"New size",w:500,h:700});save();renderStocks();calc()});
-$("res").addEventListener("click",e=>{
-  const tr=e.target.closest("tr[data-s]");if(!tr)return;sel=+tr.dataset.s;calc();
-});
-renderStocks();calc();
+function lf(){
+  const W=t($("lw").value),H=t($("lh").value),q=parseInt($("lq").value)||0,RW=t($("lrw").value),g=t($("lg").value),p=V("lp");
+  let b=null;
+  for(const [w,h,rot] of [[W,H,false],[H,W,true]]){if(w<=0||h<=0||w>RW)continue;
+    const per=Math.floor((RW+g)/(w+g)),rows=Math.ceil(q/per),len=rows*(h+g)-g;
+    if(!b||len<b.len)b={per,rows,len,rot}}
+  if(!b||!q){$("lout").innerHTML='<div class="note">Item is wider than the roll in both directions, or qty is empty.</div>';return}
+  const A=W*H*q/1e6,ru=b.len*RW/1e6,waste=ru?(1-A/ru)*100:0,un=$("unit").selectedOptions[0].text;
+  $("lout").innerHTML=`<table><tr><td>Layout</td><td>${b.per} across × ${b.rows} row${b.rows>1?"s":""}${b.rot?" (rotated)":""}</td></tr>
+  <tr><td>Roll length used</td><td class="big">${(b.len/1000).toFixed(2)} m</td></tr>
+  <tr><td>Print area</td><td>${A.toFixed(2)} m²</td></tr>
+  <tr><td>Roll area used</td><td>${ru.toFixed(2)} m² (${waste.toFixed(1)}% waste)</td></tr>
+  ${p?`<tr class="tot"><td>Material cost</td><td>${M(ru*p)}</td></tr><tr><td>Per item</td><td>${M(ru*p/q)}</td></tr>`:""}</table>
+  <div class="note">Roll width ${f(RW)} ${un}. Material cost is charged on the roll area used, including waste.</div>`}
+
+let qtext="";
+function quote(){
+  const r=R[sel],need=parseInt($("need").value)||0;
+  if(!r||!need||!r.n){$("qout").innerHTML='<div class="note">Enter a design size and Qty needed on the Qty &amp; Cost tab first, and select a stock row.</div>';qtext="";return}
+  const mat=r.cost||0,pr=r.sheets*V("qpr"),fin=need*V("qfin"),set=V("qset"),sub=mat+pr+fin+set,mk=sub*V("qmk")/100,ex=sub+mk,vat=ex*V("qvat")/100,tot=ex+vat;
+  const un=$("unit").selectedOptions[0].text,job=$("qj").value||"Print job",cu=$("qc").value;
+  $("qout").innerHTML=`<div class="note" style="margin:0 0 8px">${esc(job)}${cu?" · "+esc(cu):""} · ${new Date().toLocaleDateString()}</div>
+  <table><tr><td>Item</td><td>${$("dw").value} × ${$("dh").value} ${un} × ${need} pcs</td></tr>
+  <tr><td>Stock</td><td>${esc(r.s.n)} · ${r.n}/sheet · ${r.sheets} sheets</td></tr>
+  <tr><td>Material</td><td>${M(mat)}</td></tr><tr><td>Printing</td><td>${M(pr)}</td></tr>
+  <tr><td>Finishing</td><td>${M(fin)}</td></tr><tr><td>Setup / design</td><td>${M(set)}</td></tr>
+  <tr><td>Subtotal + markup</td><td>${M(ex)}</td></tr><tr><td>VAT ${V("qvat")}%</td><td>${M(vat)}</td></tr>
+  <tr class="tot"><td>Total</td><td>${M(tot)}</td></tr><tr><td>Per piece</td><td>${M(tot/need)}</td></tr></table>
+  ${mat?"":'<div class="note">Tip: add a price per sheet on the stock list to include material cost.</div>'}`;
+  qtext=`QUOTE — ${job}${cu?" for "+cu:""}\n${$("dw").value} x ${$("dh").value} ${un}, ${need} pcs\nStock: ${r.s.n} (${r.sheets} sheets)\nSubtotal: ${M(ex)}\nVAT ${V("qvat")}%: ${M(vat)}\nTOTAL: ${M(tot)} (${M(tot/need)} per piece)`}
+
+["dw","dh","gap","mar","bl","need","waste","rot","crop"].forEach(id=>$(id).addEventListener("input",()=>{calc()}));
+["lw","lh","lq","lrw","lg","lp","cur"].forEach(id=>$(id).addEventListener("input",()=>{lf();calc()}));
+["qc","qj","qpr","qfin","qset","qmk","qvat"].forEach(id=>$(id).addEventListener("input",quote));
+$("unit").addEventListener("change",()=>{const nu=u(),k=lastUnit/nu;
+  ["dw","dh","gap","mar","bl","lw","lh","lrw","lg"].forEach(id=>{const v=parseFloat($(id).value);if(!isNaN(v))$(id).value=+(v*k).toFixed(3)});
+  lastUnit=nu;renderStocks();calc();lf()});
+$("stocks").addEventListener("input",e=>{const d=e.target.dataset;if(d.i===undefined)return;
+  stocks[d.i][d.k]=d.k==="n"?e.target.value:d.k==="p"?(parseFloat(e.target.value)||0):t(e.target.value);save();calc()});
+$("stocks").addEventListener("click",e=>{const i=e.target.dataset.del;if(i===undefined)return;stocks.splice(+i,1);save();renderStocks();calc()});
+$("add").addEventListener("click",()=>{stocks.push({n:"New size",w:500,h:700,p:0});save();renderStocks();calc()});
+$("res").addEventListener("click",e=>{const tr=e.target.closest("tr[data-s]");if(tr){sel=+tr.dataset.s;calc()}});
+document.querySelectorAll(".tab").forEach(b=>b.addEventListener("click",()=>{
+  document.querySelectorAll(".tab").forEach(x=>x.classList.toggle("on",x===b));
+  ["t1","t2","t3"].forEach(id=>$(id).classList.toggle("hid",id!==b.dataset.t));
+  if(b.dataset.t==="t3")quote();if(b.dataset.t==="t2")lf()}));
+const pr=()=>{try{window.print()}catch(e){}};
+$("prt").addEventListener("click",pr);$("qprt").addEventListener("click",pr);
+$("qcopy").addEventListener("click",async()=>{try{await navigator.clipboard.writeText(qtext);$("qcopy").textContent="Copied"}catch(e){$("qcopy").textContent="Copy blocked"}setTimeout(()=>$("qcopy").textContent="Copy text",1500)});
+renderStocks();calc();lf();
 </script>
 </body>
 </html>
